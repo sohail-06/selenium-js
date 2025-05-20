@@ -1,0 +1,7 @@
+{
+    "jest.runMode": "on-demand",
+    "jest.autoEnable": false,
+    "testing.autoRun.mode": "none",
+    "testing.followRunningTest": false,
+    "testing.automaticallyOpenPeekView": "never"
+}
