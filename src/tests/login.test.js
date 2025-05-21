@@ -1,23 +1,19 @@
-const { Builder, By, until } = require('selenium-webdriver');
+const { Builder } = require('selenium-webdriver');
 const chrome = require('selenium-webdriver/chrome');
-const LoginPage = require('../pages/LoginPage');
-require('dotenv').config();
+const LoginPage = require ('../pages/LoginPage.js'); 
+const fs = require('fs');
 
-describe('Login Page Tests', () => {
+describe('Login Page Test Suite', () => {
     let driver;
-    let loginPage;
 
     beforeAll(async () => {
         const options = new chrome.Options();
-        // Uncomment below line to run in headless mode
-        // options.addArguments('--headless');
-        
         driver = await new Builder()
             .forBrowser('chrome')
             .setChromeOptions(options)
             .build();
-            
-        loginPage = new LoginPage(driver);
+    await driver.manage().window().maximize();
+    });
     });
 
     afterAll(async () => {
@@ -25,42 +21,33 @@ describe('Login Page Tests', () => {
     });
 
     beforeEach(async () => {
-        await loginPage.navigate();
+        await LoginPage.open(driver);
     });
 
     test('should login successfully and show welcome heading', async () => {
         try {
-            // Verify heading is not present before login
-            const headingBeforeLogin = await loginPage.isWelcomeHeadingPresent();
-            expect(headingBeforeLogin).toBe(false);
+            const isHeadingVisibleBeforeLogin = await LoginPage.isWelcomeHeadingDisplayed(driver);
+            expect(isHeadingVisibleBeforeLogin).toBe(false);
 
-            // Perform login
-            await loginPage.login(
+            await LoginPage.login(
+                driver,
                 process.env.TEST_USERNAME,
                 process.env.TEST_PASSWORD
             );
 
-            // Wait for page load
-            await driver.wait(async () => {
-                const readyState = await driver.executeScript('return document.readyState');
-                return readyState === 'complete';
-            }, 10000);
+            // Wait and check if welcome heading appears
+            const isHeadingVisibleAfterLogin = await LoginPage.isWelcomeHeadingDisplayed(driver);
+            expect(isHeadingVisibleAfterLogin).toBe(true);
 
-            // Wait for and verify heading after login
-            await driver.wait(async () => {
-                return await loginPage.isWelcomeHeadingPresent();
-            }, 10000, 'Welcome heading did not appear after login');
-
-            // Get heading text for assertion
-            const heading = await driver.findElement(By.xpath(loginPage.selectors.welcomeHeading));
-            const headingText = await heading.getText();
-            expect(headingText).toBe('Discover Simplicity & Elegance');
+            // Validate the welcome heading text
+            const headingText = await LoginPage.getWelcomeHeadingText(driver);
+            expect(headingText.trim()).toBe('Discover Simplicity & Elegance');
 
         } catch (error) {
             const screenshot = await driver.takeScreenshot();
-            require('fs').writeFileSync('error-screenshot.png', screenshot, 'base64');
-            console.error('Test failed:', error);
+            fs.writeFileSync('login-test-failure.png', screenshot, 'base64');
+            console.error('Login test failed:', error);
             throw error;
         }
-    }, 30000); // Increased timeout to 30 seconds
-});
+    }, 30000);
+

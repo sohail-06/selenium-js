@@ -2,12 +2,12 @@ require('dotenv').config();
 const { By, until } = require('selenium-webdriver');
 
 const LoginPage = {
-    url: process.env.LOGIN_URL ,
+    url: process.env.LOGIN_URL || 'https://sass-starter-kit.wordpress-studio.io/login',
 
-    usernameInput: By.xpath('//input[@data-testid="email-input"]'),
-    passwordInput: By.xpath('//input[@data-testid="password-input"]'),
-    loginButton: By.xpath('//button[@data-testid="login-button"]'),
-    welcomeHeading: By.xpath('//h2[contains(text(), "Discover Simplicity & Elegance")]'),
+    usernameInput: By.css('[data-testid="email-input"]'),
+    passwordInput: By.css('[data-testid="password-input"]'),
+    loginButton: By.css('[data-testid="login-button"]'),
+    welcomeHeading: By.css('#home h2'),
 
     async open(driver) {
         await driver.get(this.url);

@@ -2,7 +2,7 @@ const { By, until } = require('selenium-webdriver');
 require('dotenv').config();
 
 const ForgotPasswordPage = {
-    url: `${process.env.LOGIN_URL}/forget-password`,
+    url: `${process.env.FORGOT_URL}`,
 
     selectors: {
         emailInput: By.xpath('//input[@name="email"]'),
