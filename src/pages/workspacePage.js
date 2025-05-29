@@ -1,17 +1,19 @@
-const { By, until } = require('selenium-webdriver');
-const LoginPage = require('./LoginPage');
-require('dotenv').config();
+import { By, until } from 'selenium-webdriver';
+import { LoginPage } from './LoginPage.js';
+import { config } from 'dotenv';
 
-class WorkspacePage {
+config();
+
+export class WorkspacePage {
     // Centralized selectors for all elements used
     static locators = {
         avatarMenu: By.css('div.mantine-Avatar-root[aria-haspopup="menu"]'),
         profileButton: By.xpath('//button[.//div[text()="Profile"]]'),
         workspacesMenu: By.css('[data-testid="Workspace"]'),
 
-        addWorkspaceButton: By.css('[data-testid="add-workspace"]'),
-        workspaceNameInput: By.css('[data-testid="name"]'),
-        createWorkspaceButton: By.css('[data-testid="create-workspace"]'),
+        addWorkspaceButton: By.css('[data-test-id="add-workspace-btn"]'),
+        workspaceNameInput: By.css('[data-test-id="workspace-name-input"]'),
+        createWorkspaceButton: By.css('[data-test-id="create-workspace-btn"]'),
 
         exposeButton: By.css('[data-testid="expose-button"]'),
         editButton: By.css('[data-testid="edit"]'),
@@ -105,5 +107,3 @@ class WorkspacePage {
         }
     }
 }
-
-module.exports = WorkspacePage;

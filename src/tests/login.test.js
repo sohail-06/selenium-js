@@ -1,19 +1,23 @@
-const { Builder } = require('selenium-webdriver');
-const chrome = require('selenium-webdriver/chrome');
-const LoginPage = require ('../pages/LoginPage.js'); 
-const fs = require('fs');
+import { Builder } from 'selenium-webdriver';
+import chrome from 'selenium-webdriver/chrome';
+import { LoginPage } from '../pages/LoginPage.js';
+import fs from 'fs';
+import 'dotenv/config';
+import { expect, describe, beforeAll, afterAll, beforeEach, test } from '@jest/globals';
 
-describe('Login Page Test Suite', () => {
+describe('Login Page Test Suite', () =>{
     let driver;
 
     beforeAll(async () => {
         const options = new chrome.Options();
+        options.addArguments('--no-sandbox');
+        options.addArguments('--disable-dev-shm-usage');
+        
         driver = await new Builder()
             .forBrowser('chrome')
             .setChromeOptions(options)
             .build();
-    await driver.manage().window().maximize();
-    });
+        await driver.manage().window().maximize();
     });
 
     afterAll(async () => {
@@ -51,3 +55,4 @@ describe('Login Page Test Suite', () => {
         }
     }, 30000);
 
+})

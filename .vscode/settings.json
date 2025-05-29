@@ -1,7 +1,17 @@
 {
     "jest.runMode": "on-demand",
+    "jest.autoRun": {
+        "watch": false,
+        "onSave": "off"
+    },
     "jest.autoEnable": false,
-    "testing.autoRun.mode": "none",
+    "testing.autoRun.mode": "off",
     "testing.followRunningTest": false,
-    "testing.automaticallyOpenPeekView": "never"
+    "testing.automaticallyOpenPeekView": "never",
+    "github.copilot.enable": {
+        "*": true,
+        "plaintext": false,
+        "markdown": false,
+        "scminput": false
+    }
 }

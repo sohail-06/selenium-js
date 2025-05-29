@@ -1,7 +1,7 @@
-const { Builder, By, until } = require('selenium-webdriver');
-const chrome = require('selenium-webdriver/chrome');
-const ForgotPasswordPage = require('../pages/forgotPasswordPage');
-const LoginPage = require('../pages/LoginPage');
+import { Builder, By, until } from 'selenium-webdriver';
+import { Options } from 'selenium-webdriver/chrome';
+import { navigate, requestPasswordReset, getSuccessMessage } from '../pages/forgotPasswordPage';
+import { open, login } from '../pages/LoginPage';
 require('dotenv').config();
 
 describe('Complete Password Reset Flow Tests', () => {
@@ -10,7 +10,7 @@ describe('Complete Password Reset Flow Tests', () => {
     const NEW_PASSWORD = process.env.TEST_PASSWORD || 'NewPassword@123';
 
     beforeAll(async () => {
-        const options = new chrome.Options();
+        const options = new Options();
         driver = await new Builder()
             .forBrowser('chrome')
             .setChromeOptions(options)
@@ -24,10 +24,10 @@ describe('Complete Password Reset Flow Tests', () => {
 
     test('complete password reset flow through Mailhog', async () => {
         try {
-            await ForgotPasswordPage.navigate(driver);
-            await ForgotPasswordPage.requestPasswordReset(driver, process.env.TEST_USERNAME);
+            await navigate(driver);
+            await requestPasswordReset(driver, process.env.TEST_USERNAME);
 
-            const successMessage = await ForgotPasswordPage.getSuccessMessage(driver);
+            const successMessage = await getSuccessMessage(driver);
             expect(successMessage).toBeTruthy();
 
             // Step 2: Get reset link from Mailhog and complete password reset
@@ -89,7 +89,10 @@ describe('Complete Password Reset Flow Tests', () => {
                 10000
             );
             await driver.wait(until.elementIsVisible(toast), 15000);
-            await driver.sleep(3000); // Optional pause after toast is visible
+            await driver.sleep(3000); 
+            await open(driver);
+            await driver.wait(until.elementLocated(By.css('input')), 10000);
+            await login(driver, username, password);// Optional pause after toast is visible
 
         } catch (error) {
             console.error('Error fetching from Mailhog:', error);

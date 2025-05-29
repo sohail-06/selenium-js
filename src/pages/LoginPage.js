@@ -1,25 +1,25 @@
-require('dotenv').config();
-const { By, until } = require('selenium-webdriver');
+import 'dotenv/config';
+import { By, until } from 'selenium-webdriver';
 
-const LoginPage = {
-    url: process.env.LOGIN_URL || 'https://sass-starter-kit.wordpress-studio.io/login',
+export class LoginPage {
+    static url = process.env.LOGIN_URL || 'https://sass-starter-kit.wordpress-studio.io/login';
 
-    usernameInput: By.css('[data-testid="email-input"]'),
-    passwordInput: By.css('[data-testid="password-input"]'),
-    loginButton: By.css('[data-testid="login-button"]'),
-    welcomeHeading: By.css('#home h2'),
+    static usernameInput = By.css('[data-testid="email-input"]');
+    static passwordInput = By.css('[data-testid="password-input"]');
+    static loginButton = By.css('[data-testid="login-button"]');
+    static welcomeHeading = By.css('#home h2');
 
-    async open(driver) {
+    static async open(driver) {
         await driver.get(this.url);
-    },
+    }
 
-    async login(driver, username, password) {
+    static async login(driver, username, password) {
         await driver.findElement(this.usernameInput).sendKeys(username);
         await driver.findElement(this.passwordInput).sendKeys(password);
         await driver.findElement(this.loginButton).click();
-    },
+    }
 
-    async isWelcomeHeadingDisplayed(driver) {
+    static async isWelcomeHeadingDisplayed(driver) {
         try {
             await driver.wait(until.elementLocated(this.welcomeHeading), 10000);
             const heading = await driver.findElement(this.welcomeHeading);
@@ -27,12 +27,10 @@ const LoginPage = {
         } catch {
             return false;
         }
-    },
+    }
 
-    async getWelcomeHeadingText(driver) {
+    static async getWelcomeHeadingText(driver) {
         const heading = await driver.findElement(this.welcomeHeading);
         return await heading.getText();
     }
-};
-
-module.exports = LoginPage;
+}

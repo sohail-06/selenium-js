@@ -1,9 +1,12 @@
-const { Builder, By, until } = require('selenium-webdriver');
-const chrome = require('selenium-webdriver/chrome');
-const WorkspacePage = require('../pages/workspacePage');
-require('dotenv').config();
-const { faker } = require('@faker-js/faker');
-const fs = require('fs');
+import { Builder, By, until } from 'selenium-webdriver';
+import chrome from 'selenium-webdriver/chrome';
+import WorkspacePage from '../pages/workspacePage.js';
+import { config } from 'dotenv';
+import { faker } from '@faker-js/faker';
+import fs from 'fs';
+import { describe, test, expect, beforeAll, afterAll } from '@jest/globals';
+
+config();
 
 describe('Workspace Management Tests', () => {
     let driver;
