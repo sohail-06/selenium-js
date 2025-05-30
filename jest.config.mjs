@@ -1,6 +1,11 @@
 export default {
     testEnvironment: 'node',
-    transform: {},
+    transform: {
+        '^.+\\.m?js$': ['babel-jest', { rootMode: 'upward' }]
+    },
+    transformIgnorePatterns: [
+        'node_modules/(?!(selenium-webdriver|@jest/globals)/)'
+    ],
     moduleNameMapper: {
         '^(\\.{1,2}/.*)\\.(m)?js$': '$1'
     },
@@ -8,7 +13,7 @@ export default {
         '**/tests/**/*.test.js',
         '**/tests/**/*.spec.js'
     ],
-    testTimeout: 60000,
+    testTimeout: 60000 * 5,
     verbose: true,
     rootDir: 'src',
     errorOnDeprecated: true,

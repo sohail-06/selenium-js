@@ -1,6 +1,6 @@
 import { Builder, By, until } from 'selenium-webdriver';
 import chrome from 'selenium-webdriver/chrome';
-import WorkspacePage from '../pages/workspacePage.js';
+import { WorkspacePage } from '../pages/workspacePage.js';
 import { config } from 'dotenv';
 import { faker } from '@faker-js/faker';
 import fs from 'fs';

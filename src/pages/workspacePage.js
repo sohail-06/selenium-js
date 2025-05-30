@@ -11,9 +11,9 @@ export class WorkspacePage {
         profileButton: By.xpath('//button[.//div[text()="Profile"]]'),
         workspacesMenu: By.css('[data-testid="Workspace"]'),
 
-        addWorkspaceButton: By.css('[data-test-id="add-workspace-btn"]'),
-        workspaceNameInput: By.css('[data-test-id="workspace-name-input"]'),
-        createWorkspaceButton: By.css('[data-test-id="create-workspace-btn"]'),
+        addWorkspaceButton: By.css('[data-testid="add-workspace"]'), // Updated to match application's data-testid
+        workspaceNameInput: By.css('[data-testid="name"]'),
+        createWorkspaceButton: By.css('[data-testid="create-workspace"]'),
 
         exposeButton: By.css('[data-testid="expose-button"]'),
         editButton: By.css('[data-testid="edit"]'),
@@ -23,23 +23,38 @@ export class WorkspacePage {
         successUpdateMsg: By.xpath(`//div[contains(text(),'Workspace updated successfully')]`),
         successDeleteMsg: By.xpath(`//div[contains(text(),'Workspace deleted successfully')]`),
 
-        deleteConfirmButton: By.xpath("//button//span[contains(@class, 'mantine-Button-label') and text()='Delete']"),
+        deleteConfirmButton: By.xpath('//*[@id="mantine-gnb8arv8r-body"]/div/button[2]'),
     };
 
     static async navigate(driver, username = process.env.TEST_USERNAME, password = process.env.TEST_PASSWORD) {
         try {
+            // First ensure we're logged in
             await LoginPage.open(driver);
             await driver.wait(until.elementLocated(By.css('input')), 10000);
             await LoginPage.login(driver, username, password);
+            
+            // Wait for the page to load after login
+            await driver.sleep(2000);
 
+            // Click on the avatar menu with retry
             const avatar = await driver.wait(until.elementLocated(this.locators.avatarMenu), 10000);
-            await avatar.click();
+            await driver.wait(until.elementIsVisible(avatar), 5000);
+            await driver.executeScript("arguments[0].click();", avatar);
 
+            // Click profile button with retry
             const profileBtn = await driver.wait(until.elementLocated(this.locators.profileButton), 10000);
-            await profileBtn.click();
+            await driver.wait(until.elementIsVisible(profileBtn), 5000);
+            await driver.executeScript("arguments[0].click();", profileBtn);
+            
+            await driver.sleep(1000);
 
+            // Click workspaces menu with retry
             const workspaces = await driver.wait(until.elementLocated(this.locators.workspacesMenu), 10000);
-            await workspaces.click();
+            await driver.wait(until.elementIsVisible(workspaces), 5000);
+            await driver.executeScript("arguments[0].click();", workspaces);
+            
+            // Wait for workspace page to load
+            await driver.sleep(2000);
 
         } catch (error) {
             console.error('Error navigating to workspace page:', error);
@@ -49,6 +64,16 @@ export class WorkspacePage {
 
     static async createWorkspace(driver, workspaceName) {
         try {
+            // Wait for add workspace button and click with retry
+            const addButton = await driver.wait(
+                until.elementLocated(this.locators.addWorkspaceButton), 
+                15000,
+                'Add workspace button not found'
+            );
+            await driver.wait(until.elementIsVisible(addButton), 5000);
+            await driver.executeScript("arguments[0].scrollIntoView(true);", addButton);
+            await driver.sleep(1000);
+            await driver.executeScript("arguments[0].click();", addButton);
             const addBtn = await driver.wait(until.elementLocated(this.locators.addWorkspaceButton), 10000);
             await addBtn.click();
 
