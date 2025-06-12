@@ -1,5 +1,6 @@
 export default {
     testEnvironment: 'node',
+    setupFilesAfterEnv: ['<rootDir>/jest.setup.mjs'],
     transform: {
         '^.+\\.m?js$': ['babel-jest', { rootMode: 'upward' }]
     },
