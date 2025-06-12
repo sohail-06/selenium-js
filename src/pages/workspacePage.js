@@ -1,5 +1,5 @@
 import { By, until } from 'selenium-webdriver';
-import { LoginPage } from './LoginPage.js';
+import { LoginPage } from './loginPage.js';
 import { config } from 'dotenv';
 
 config();
