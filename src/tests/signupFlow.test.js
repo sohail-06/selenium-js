@@ -1,36 +1,39 @@
 import { Builder } from 'selenium-webdriver';
+import { Options } from 'selenium-webdriver/chrome';
 import { faker } from '@faker-js/faker';
-import { SignupPage } from '../pages/signupPage.js'; // Adjust the path as necessary
+import { SignupPage } from '../pages/signupPage.js';
 
-describe('Signup Page', () => {
+describe('Signup Flow', () => {
     let driver;
     let page;
     const testEmail = `${faker.internet.username().toLowerCase()}@itobuz.com`;
     const testPassword = 'Password123!';
 
-    beforeEach(async () => {
-        driver = await new Builder().forBrowser('chrome').build();
-        await driver.manage().window().maximize();
+    beforeAll(async () => {
+        const options = new Options()
+            .addArguments('--headless', '--no-sandbox', '--disable-dev-shm-usage');
+        
+        driver = await new Builder()
+            .forBrowser('chrome')
+            .setChromeOptions(options)
+            .build();
+
         page = new SignupPage(driver);
     });
 
-    afterEach(async () => {
-        if (driver) {
-            try {
-                await driver.quit();
-            } catch (error) {
-                console.warn('Failed to close browser:', error.message);
-            }
-        }
+    afterAll(async () => {
+        await driver?.quit();
     });
 
-    it('should sign up a new user, confirm via MailHog, and log in', async () => {
+    it('should register, verify via MailHog, and log in successfully', async () => {
         await page.navigateToLogin();
         await page.clickRegisterLink();
         await page.fillRegistrationForm(testEmail, testPassword);
         await page.submitRegistration();
-        const toastText = await page.getRegistrationToast();
-        expect(toastText).toContain('Please check your email for verification');
+
+        const toast = await page.getRegistrationToast();
+        expect(toast).toContain('Please check your email for verification');
+
         await page.openMailhogAndFindEmail();
         await page.confirmEmailAndClick();
         await page.confirmInIframe();

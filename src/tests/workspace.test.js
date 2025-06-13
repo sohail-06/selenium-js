@@ -11,29 +11,29 @@ config();
 describe('Workspace Management Tests', () => {
     let driver;
     const TEST_WORKSPACE_NAME = 'Test ' + faker.string.alphanumeric(4);
-    const randomSuffix = faker.string.alphanumeric(4);
-    const UPDATED_WORKSPACE_NAME = 'Test ' + randomSuffix;
+    const UPDATED_WORKSPACE_NAME = 'Test ' + faker.string.alphanumeric(4);
 
     beforeAll(async () => {
-        const options = new chrome.Options();
-        options.addArguments('--no-sandbox');
-        options.addArguments('--disable-dev-shm-usage');
+        const options = new chrome.Options().addArguments(
+            '--headless',
+            '--no-sandbox',
+            '--disable-dev-shm-usage'
+        );
+
         driver = await new Builder()
             .forBrowser('chrome')
             .setChromeOptions(options)
             .build();
-        await driver.manage().window().maximize();
     });
 
     afterAll(async () => {
-        if (driver) {
-            try {
-                await driver.quit();
-            } catch (error) {
-                console.error('Error closing browser:', error);
-            }
-        }
+        await driver?.quit();
     });
+
+    const takeScreenshot = async (filename) => {
+        const screenshot = await driver.takeScreenshot();
+        fs.writeFileSync(filename, screenshot, 'base64');
+    };
 
     test('should create a new workspace', async () => {
         try {
@@ -43,72 +43,55 @@ describe('Workspace Management Tests', () => {
             await driver.wait(until.elementIsVisible(successMessage), 10000);
             expect(await successMessage.isDisplayed()).toBe(true);
 
-            // Verify workspace appears in grid
             const workspace = await WorkspacePage.findWorkspaceRow(driver, TEST_WORKSPACE_NAME);
-            const displayedName = await workspace.getText();
-            expect(displayedName.trim()).toBe(TEST_WORKSPACE_NAME);
-
+            expect((await workspace.getText()).trim()).toBe(TEST_WORKSPACE_NAME);
         } catch (error) {
-            console.error('Error in create workspace test:', error);
-            const screenshot = await driver.takeScreenshot();
-            fs.writeFileSync('workspace-creation-error.png', screenshot, 'base64');
+            await takeScreenshot('workspace-creation-error.png');
             throw error;
         }
     }, 30000);
 
     test('should edit workspace name', async () => {
         try {
-            console.log('TEST_WORKSPACE_NAME:', TEST_WORKSPACE_NAME);
-            console.log('UPDATED_WORKSPACE_NAME:', UPDATED_WORKSPACE_NAME);
-
             const successMessage = await WorkspacePage.editWorkspace(driver, TEST_WORKSPACE_NAME, UPDATED_WORKSPACE_NAME);
 
             await driver.wait(until.elementIsVisible(successMessage), 10000);
             expect(await successMessage.isDisplayed()).toBe(true);
 
-            // Verify the updated name appears in grid
             const workspace = await WorkspacePage.findWorkspaceRow(driver, UPDATED_WORKSPACE_NAME);
-            const displayedName = await workspace.getText();
-            expect(displayedName.trim()).toBe(UPDATED_WORKSPACE_NAME);
-
-            console.log('Expected:', UPDATED_WORKSPACE_NAME);
-            console.log('Found:', displayedName);
-
+            expect((await workspace.getText()).trim()).toBe(UPDATED_WORKSPACE_NAME);
         } catch (error) {
-            console.error('Error in edit workspace test:', error);
-            const screenshot = await driver.takeScreenshot();
-            fs.writeFileSync('workspace-edit-error.png', screenshot, 'base64');
+            await takeScreenshot('workspace-edit-error.png');
             throw error;
         }
     }, 30000);
 
     test('should delete workspace', async () => {
         try {
-            // Verify workspace present before deletion
             const workspace = await WorkspacePage.findWorkspaceRow(driver, UPDATED_WORKSPACE_NAME);
-            const displayedName = await workspace.getText();
-            expect(displayedName.trim()).toBe(UPDATED_WORKSPACE_NAME);
-            console.log('Verified workspace exists before deletion:', displayedName);
+            expect((await workspace.getText()).trim()).toBe(UPDATED_WORKSPACE_NAME);
 
-            // Delete workspace and verify success
             const successMessage = await WorkspacePage.deleteWorkspace(driver, UPDATED_WORKSPACE_NAME);
             await driver.wait(until.elementIsVisible(successMessage), 10000);
             expect(await successMessage.isDisplayed()).toBe(true);
 
-            // Verify workspace no longer exists
-            await driver.sleep(2000); // Give grid time to update
+            await driver.sleep(2000); // Allow grid to update
+
             try {
                 await WorkspacePage.findWorkspaceRow(driver, UPDATED_WORKSPACE_NAME, 5000);
                 throw new Error('Workspace still exists after deletion');
             } catch (error) {
-                // Expected error, workspace should not be found
                 expect(error.message).toContain('Could not find workspace row');
             }
 
+            const logoutLink = await driver.wait(
+                until.elementLocated(By.xpath("//a[@href='/logout']")),
+                10000
+            );
+            await logoutLink.click();
+            await driver.sleep(3000);
         } catch (error) {
-            console.error('Error in delete workspace test:', error);
-            const screenshot = await driver.takeScreenshot();
-            fs.writeFileSync('workspace-delete-error.png', screenshot, 'base64');
+            await takeScreenshot('workspace-delete-error.png');
             throw error;
         }
     }, 30000);
