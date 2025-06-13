@@ -5,7 +5,7 @@ on:
     branches:
       - main
   schedule:
-    - cron: '38 19 * * *'  # 7:05 PM UTC
+    - cron: '31 15 * * *'
 
 jobs:
   test:
@@ -24,4 +24,4 @@ jobs:
         run: npm install
 
       - name: Run Selenium tests
-        run: npm run test
+        run: npm run test:all
