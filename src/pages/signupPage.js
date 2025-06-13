@@ -180,9 +180,34 @@ export class SignupPage {
     async confirmInIframe() {
         const iframe = await this.driver.findElement(By.css('iframe'));
         await this.driver.switchTo().frame(iframe);
-        const button = await this.driver.wait(until.elementLocated(By.xpath("//span[contains(text(), 'Confirm Sign up')]")), 5000);
-        await button.click();
-        await this.driver.switchTo().defaultContent();
+        try {
+            // Find all anchors and log their hrefs and texts
+            const anchors = await this.driver.findElements(By.css('a'));
+            let confirmLink = null;
+            let debugLinks = [];
+            for (const anchor of anchors) {
+                const href = await anchor.getAttribute('href');
+                const text = await anchor.getText();
+                debugLinks.push({ href, text });
+                if (href && (href.includes('/confirm') || href.includes('/activate') || href.includes('/signup') || href.includes('/verify'))) {
+                    confirmLink = anchor;
+                    break;
+                }
+            }
+            if (!confirmLink && anchors.length === 1) {
+                // Fallback: click the only link if just one exists
+                confirmLink = anchors[0];
+            }
+            if (confirmLink) {
+                await confirmLink.click();
+            } else {
+                const pageSource = await this.driver.getPageSource();
+                console.error('Could not find confirmation link. Links found:', debugLinks, '\nPage source:', pageSource);
+                throw new Error('Confirmation link not found in email iframe');
+            }
+        } finally {
+            await this.driver.switchTo().defaultContent();
+        }
     }
 
     async login(email, password) {

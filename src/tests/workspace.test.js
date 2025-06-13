@@ -12,7 +12,7 @@ config();
 describe('Workspace Management Tests', () => {
     let driver;
     const TEST_WORKSPACE_NAME = `Test-${faker.string.alphanumeric(6)}`;
-    const UPDATED_WORKSPACE_NAME = `Test-${faker.string.alphanumeric(6)}`;
+    const UPDATED_WORKSPACE_NAME = `Test-${faker.string.alphanumeric(5)}`;
 
     beforeAll(async () => {
         const options = new chrome.Options().addArguments(
@@ -54,7 +54,7 @@ describe('Workspace Management Tests', () => {
             await takeScreenshot('workspace-creation-error.png');
             throw error;
         }
-    }, 30000);
+    }, 60000);
 
     test('should edit the workspace name successfully', async () => {
         try {

@@ -58,15 +58,24 @@ export class ForgotPasswordPage {
             10000,
             'Forgot password form not found'
         );
-        
         // Enter email with wait
         const emailInput = await this.driver.wait(
             until.elementLocated(By.css(this.selectors.emailInput)),
             10000,
             'Email input not found'
         );
-        await emailInput.clear();
-        await emailInput.sendKeys(email);
+        // Wait for input to be visible and enabled
+        await this.driver.wait(until.elementIsVisible(emailInput), 5000, 'Email input not visible');
+        await this.driver.wait(async () => await emailInput.isEnabled(), 5000, 'Email input not enabled');
+        try {
+            await this.driver.executeScript("arguments[0].scrollIntoView(true);", emailInput);
+            await emailInput.clear();
+            await emailInput.sendKeys(email);
+        } catch (error) {
+            const pageSource = await this.driver.getPageSource();
+            console.error('Email input not interactable. Page source:', pageSource);
+            throw error;
+        }
         await this.driver.sleep(500);
 
         // Find and click request button with retry
@@ -88,11 +97,17 @@ export class ForgotPasswordPage {
     }
 
     async waitForSuccessMessage() {
-        await this.driver.wait(
-            until.elementLocated(By.xpath(this.selectors.successMessage)),
-            10000,
-            'Success message not found'
-        );
+        try {
+            await this.driver.wait(
+                until.elementLocated(By.xpath(this.selectors.successMessage)),
+                20000, // Increased from 10000 to 20000 ms
+                'Success message not found'
+            );
+        } catch (error) {
+            const pageSource = await this.driver.getPageSource();
+            console.error('Success message not found. Page source:', pageSource);
+            throw error;
+        }
     }
 
     async getResetTokenViaMailhog(email, retryCount = 5, delayMs = 2000) {

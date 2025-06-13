@@ -6,8 +6,11 @@
   "type": "module",
   "scripts": {
     "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:login": "jest src/tests/login.test.js",
+    "test:newPasswordReset": "jest src/tests/newPasswordReset.test.js",
+    "test:signup": "jest src/tests/signupFlow.test.js",
+    "test:workspace": "jest src/tests/workspace.test.js",
+    "test:all": "npm run test:login && npm run test:newPasswordReset && npm run test:signup && npm run test:workspace"
   },
   "devDependencies": {
     "@babel/core": "^7.27.3",

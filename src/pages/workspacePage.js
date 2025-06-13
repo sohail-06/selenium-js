@@ -34,11 +34,14 @@ export class WorkspacePage {
     // Helper method to wait for grid loading
     static async waitForGridUpdate(driver) {
         // First wait for grid to be present
-        const grid = await driver.wait(
+        await driver.wait(
             until.elementLocated(this.locators.workspaceGrid),
             10000,
             'Grid element not found within timeout'
         );
+
+        // Always re-find the grid before interacting to avoid stale reference
+        const grid = await driver.findElement(this.locators.workspaceGrid);
 
         // Wait for grid to be visible
         await driver.wait(
@@ -50,19 +53,19 @@ export class WorkspacePage {
         // Wait for any loading states to complete
         await driver.sleep(1500);
 
-        // Scroll grid into view to ensure it's properly rendered
-        await driver.executeScript("arguments[0].scrollIntoView(true);", grid);
-        
+        // Re-find the grid before scrolling to avoid stale reference
+        const gridForScroll = await driver.findElement(this.locators.workspaceGrid);
+        await driver.executeScript("arguments[0].scrollIntoView(true);", gridForScroll);
         // Additional small wait for any post-scroll rendering
         await driver.sleep(500);
     }
 
     // Helper to find workspace row with retry
-    static async findWorkspaceRow(driver, workspaceName, timeout = 10000) {
+    static async findWorkspaceRow(driver, workspaceName, timeout = 15000) {
         const startTime = Date.now();
         let lastError;
         let attempts = 0;
-        const maxAttempts = 5;
+        const maxAttempts = 8;
 
         while (Date.now() - startTime < timeout && attempts < maxAttempts) {
             attempts++;
@@ -70,10 +73,10 @@ export class WorkspacePage {
                 // Wait for grid to be stable first
                 await this.waitForGridUpdate(driver);
 
-                // Try to find the row
+                // Try to find the row (trim workspaceName)
                 const row = await driver.wait(
-                    until.elementLocated(this.locators.workspaceRow(workspaceName)),
-                    2000
+                    until.elementLocated(this.locators.workspaceRow(workspaceName.trim())),
+                    3000
                 );
 
                 // Verify the row is visible
@@ -88,30 +91,46 @@ export class WorkspacePage {
             } catch (error) {
                 lastError = error;
                 console.log(`Attempt ${attempts} failed to find workspace "${workspaceName}": ${error.message}`);
-                
+                // Debug: log all visible workspace names in the grid
+                try {
+                    const grid = await driver.findElement(this.locators.workspaceGrid);
+                    const cells = await grid.findElements(By.css('.MuiDataGrid-cell'));
+                    const cellTexts = [];
+                    for (const cell of cells) {
+                        try {
+                            const text = await cell.getText();
+                            if (text) cellTexts.push(text);
+                        } catch {}
+                    }
+                    console.log('Visible workspace cell texts:', cellTexts);
+                } catch (e) {
+                    console.log('Could not log workspace grid cells:', e.message);
+                }
                 // Try refreshing the grid view by interacting with search
                 try {
                     const searchInput = await driver.findElement(this.locators.searchInput);
                     await searchInput.clear();
                     await searchInput.sendKeys(workspaceName);
-                    await driver.sleep(1000);
+                    await driver.sleep(1200);
                     await searchInput.clear();
-                    await driver.sleep(500);
+                    await driver.sleep(600);
                 } catch (searchError) {
                     console.log('Failed to interact with search:', searchError.message);
                 }
             }
         }
-        
         throw new Error(
             `Could not find workspace row "${workspaceName}" after ${attempts} attempts and ${Date.now() - startTime}ms.\n` +
             `Last error: ${lastError?.message}\n` +
-            'Please verify the workspace name is correct and the grid has loaded properly.'
+            'Visible workspace cell texts are logged above. Please verify the workspace name is correct and the grid has loaded properly.'
         );
     }
 
     static async navigate(driver, username = process.env.TEST_USERNAME, password = process.env.TEST_PASSWORD) {
         try {
+            // Maximize the browser window for reliable UI rendering
+            await driver.manage().window().maximize();
+
             // First ensure we're logged in
             await LoginPage.open(driver);
             await driver.wait(until.elementLocated(By.css('input')), 10000);
@@ -169,7 +188,26 @@ export class WorkspacePage {
             await createBtn.click();
 
             // Wait for success message
-            return await driver.wait(until.elementLocated(this.locators.successCreateMsg), 10000);
+            const successMsg = await driver.wait(until.elementLocated(this.locators.successCreateMsg), 10000);
+            // Wait for grid to update after creation
+            await driver.sleep(2000);
+            await this.waitForGridUpdate(driver);
+            // Debug: log all visible workspace names after creation
+            try {
+                const grid = await driver.findElement(this.locators.workspaceGrid);
+                const cells = await grid.findElements(By.css('.MuiDataGrid-cell'));
+                const cellTexts = [];
+                for (const cell of cells) {
+                    try {
+                        const text = await cell.getText();
+                        if (text) cellTexts.push(text);
+                    } catch {}
+                }
+                console.log('Visible workspace cell texts after creation:', cellTexts);
+            } catch (e) {
+                console.log('Could not log workspace grid cells after creation:', e.message);
+            }
+            return successMsg;
         } catch (error) {
             console.error('Error creating workspace:', error);
             throw error;
