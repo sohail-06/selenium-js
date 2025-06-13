@@ -4,14 +4,15 @@ import { WorkspacePage } from '../pages/workspacePage.js';
 import { config } from 'dotenv';
 import { faker } from '@faker-js/faker';
 import fs from 'fs';
+import path from 'path';
 import { describe, test, expect, beforeAll, afterAll } from '@jest/globals';
 
 config();
 
 describe('Workspace Management Tests', () => {
     let driver;
-    const TEST_WORKSPACE_NAME = 'Test ' + faker.string.alphanumeric(4);
-    const UPDATED_WORKSPACE_NAME = 'Test ' + faker.string.alphanumeric(4);
+    const TEST_WORKSPACE_NAME = `Test-${faker.string.alphanumeric(6)}`;
+    const UPDATED_WORKSPACE_NAME = `Test-${faker.string.alphanumeric(6)}`;
 
     beforeAll(async () => {
         const options = new chrome.Options().addArguments(
@@ -32,10 +33,14 @@ describe('Workspace Management Tests', () => {
 
     const takeScreenshot = async (filename) => {
         const screenshot = await driver.takeScreenshot();
-        fs.writeFileSync(filename, screenshot, 'base64');
+        const dir = path.resolve('./screenshots');
+        if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir);
+        }
+        fs.writeFileSync(path.join(dir, filename), screenshot, 'base64');
     };
 
-    test('should create a new workspace', async () => {
+    test('should create and display a new workspace', async () => {
         try {
             await WorkspacePage.navigate(driver);
             const successMessage = await WorkspacePage.createWorkspace(driver, TEST_WORKSPACE_NAME);
@@ -51,7 +56,7 @@ describe('Workspace Management Tests', () => {
         }
     }, 30000);
 
-    test('should edit workspace name', async () => {
+    test('should edit the workspace name successfully', async () => {
         try {
             const successMessage = await WorkspacePage.editWorkspace(driver, TEST_WORKSPACE_NAME, UPDATED_WORKSPACE_NAME);
 
@@ -66,7 +71,7 @@ describe('Workspace Management Tests', () => {
         }
     }, 30000);
 
-    test('should delete workspace', async () => {
+    test('should delete the workspace and confirm deletion', async () => {
         try {
             const workspace = await WorkspacePage.findWorkspaceRow(driver, UPDATED_WORKSPACE_NAME);
             expect((await workspace.getText()).trim()).toBe(UPDATED_WORKSPACE_NAME);
